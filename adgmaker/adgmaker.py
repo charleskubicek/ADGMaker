@@ -12,19 +12,6 @@ import os
 import zipfile
 from jinja2 import Environment, FileSystemLoader
 
-####################################################################
-# Data
-####################################################################
-
-home_dir = os.path.expanduser("~")
-samples_dir = os.path.join(home_dir, 'Music', 'Ableton', 'User Library', 'Samples', 'Imported')
-adg_dir = os.path.join(home_dir, 'Music', 'Ableton', 'User Library', 'Presets', 'Instruments', 'Created')
-
-
-####################################################################
-# Main
-####################################################################
-
 
 class PhilharmonicaADGMaker(object):
     """
@@ -131,10 +118,10 @@ class ADGMaker(object):
         self.debug = debug
 
     # Ex: {'cello_05_forte_arco-normal': [ xml, xml, .. ]
-    adgs = {}
-    default_note = 104
+        self.adgs = {}
+        self.default_note = 104
 
-    jenv = Environment(loader=FileSystemLoader(os.path.dirname(os.path.realpath(__file__))),
+        self.jenv = Environment(loader=FileSystemLoader(os.path.dirname(os.path.realpath(__file__))),
                        trim_blocks=True)
 
     def empty_adgs(self):
