@@ -309,7 +309,8 @@ class SamplePackAdgMaker:
         print("Done! Remember to update your User Library in Live to see these new instruments!")
 
     def get_subdirs_containing_valid_samples(self, path, include_loops=False):
-        return [p for p in Path(path).iterdir() if p.is_dir() and (include_loops is True or (include_loops is False and 'loop' not in p.name.lower())) ]
+        return [p for p in Path(path).iterdir() if
+                p.is_dir() and (include_loops is True or (include_loops is False and 'loop' not in p.name.lower()))]
 
     def create_adg_from_samples_path(self, samples_path, given_name=None, include_loops=False):
         """
@@ -337,9 +338,7 @@ class SamplePackAdgMaker:
 
         for adg_name in self.adg_maker.all_adgs():  # self.adgs.keys():
             final_xml = self.adg_maker.create_base_xml(adg_name)
-            adg_file = self.adg_maker.create_adg(adg_name, final_xml)
-
-        return adg_file
+            self.adg_maker.create_adg(adg_name, final_xml)
 
 
 if __name__ == '__main__':  # pragma: no cover
