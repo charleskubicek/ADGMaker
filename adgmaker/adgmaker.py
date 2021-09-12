@@ -338,23 +338,5 @@ class SamplePackAdgMaker:
         return adg_file
 
 
-def handle():  # pragma: no cover
-    """
-    Main program execution handler.
-    """
-
-    if platform.system() != "Darwin":
-        print("ADGMaker currently only works for OSX. Sorry.")
-        return
-
-    # try:
-    adg_maker = PhilharmonicaADGMaker(file_type='mp3')
-    adg_maker.handle()
-    # except (KeyboardInterrupt, SystemExit): # pragma: no cover
-    #     return
-    # except Exception as e:
-    #     print(e)
-
-
 if __name__ == '__main__':  # pragma: no cover
     SamplePackAdgMaker().handle()
