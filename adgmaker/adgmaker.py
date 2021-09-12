@@ -280,6 +280,10 @@ class SamplePackAdgMaker:
         help_message = "Please supply a path to a folder of samples. See --help for more options."
         parser = argparse.ArgumentParser(description='ADGMaker - Create Ableton Live Instruments.\n')
         parser.add_argument('samples_path', metavar='U', type=str, nargs='*', help=help_message)
+
+        parser.add_argument('-l', '--loops', action='store_true', help='Include suspected loop dirs (excluded by '
+                                                                       'default)', default=False)
+        parser.add_argument('-n', '--name', type=str, help='Name', default=False)
         parser.add_argument('-d', '--debug', action='store_true', help='Debug (no delete XML)', default=False)
         parser.add_argument('-v', '--version', action='store_true', default=False,
                             help='Display the current version of ADGMaker')
@@ -287,7 +291,7 @@ class SamplePackAdgMaker:
         args = parser.parse_args(argv)
         self.vargs = vars(args)
 
-        print(self.vargs['samples_path'])
+        print(self.vargs)
 
         if self.vargs['version']:
             version = pkg_resources.require("adgmaker")[0].version
@@ -300,14 +304,14 @@ class SamplePackAdgMaker:
             return
 
         if self.vargs['samples_path']:
-            self.create_adg_from_samples_path(self.vargs['samples_path'][0])
+            self.create_adg_from_samples_path(self.vargs['samples_path'][0], self.vargs['name'], self.vargs['loops'])
 
         print("Done! Remember to update your User Library in Live to see these new instruments!")
 
-    def get_subdirs_containing_samples(self, path):
-        return [p for p in Path(path).iterdir() if p.is_dir()]
+    def get_subdirs_containing_valid_samples(self, path, include_loops=False):
+        return [p for p in Path(path).iterdir() if p.is_dir() and (include_loops is True or (include_loops is False and 'loop' not in p.name.lower())) ]
 
-    def create_adg_from_samples_path(self, samples_path, given_name=None):
+    def create_adg_from_samples_path(self, samples_path, given_name=None, include_loops=False):
         """
         Create an ADG from the samples path.
 
@@ -317,7 +321,7 @@ class SamplePackAdgMaker:
         if given_name is None:
             given_name = Path(samples_path).parts[-1]
 
-        subdirs = self.get_subdirs_containing_samples(samples_path)
+        subdirs = self.get_subdirs_containing_valid_samples(samples_path, include_loops)
 
         for subdir in subdirs:
 
