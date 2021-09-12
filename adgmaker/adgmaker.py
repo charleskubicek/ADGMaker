@@ -403,6 +403,9 @@ class SamplePackAdgMaker:
 
         print("Done! Remember to update your User Library in Live to see these new instruments!")
 
+    def get_subdirs_containing_samples(self, path):
+        return [p for p in Path(path).iterdir() if p.is_dir()]
+
     def create_adg_from_samples_path(self, samples_path, given_name=None):
         """
         Create an ADG from the samples path.
@@ -413,14 +416,19 @@ class SamplePackAdgMaker:
         if given_name is None:
             given_name = Path(samples_path).parts[-1]
 
-        samples_list = list(Path(samples_path).rglob(file_type_wildcard))[0:104]
+        subdirs = self.get_subdirs_containing_samples(samples_path)
 
-        for i, wav in enumerate(samples_list):
-            print(wav)
-            file_path = os.path.abspath(wav)
+        for subdir in subdirs:
 
-            note_value = 104 - i
-            self.adg_maker.add_sample_file_to_instrument(file_path, given_name, note_value)
+            adg_name = f'{given_name} - {subdir.name}'
+
+            samples_list = list(Path(subdir).rglob(file_type_wildcard))[0:104]
+
+            for i, wav in enumerate(samples_list):
+                file_path = os.path.abspath(wav)
+
+                note_value = 104 - i
+                self.adg_maker.add_sample_file_to_instrument(file_path, adg_name, note_value)
 
         for adg_name in self.adg_maker.all_adgs():  # self.adgs.keys():
             final_xml = self.adg_maker.create_base_xml(adg_name)
