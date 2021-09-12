@@ -127,13 +127,7 @@
                                         <RefersToFolder Value="false" />
                                         <SearchHint>
                                             <PathHint>
-                                                <RelativePathElement Dir="Users" />
-                                                <RelativePathElement Dir="rjones" />
-                                                <RelativePathElement Dir="Music" />
-                                                <RelativePathElement Dir="Ableton" />
-                                                <RelativePathElement Dir="User Library" />
-                                                <RelativePathElement Dir="Samples" />
-                                                <RelativePathElement Dir="Imported" />
+                                                {{path_hint_els}}
                                             </PathHint>
                                             <FileSize Value="11806" />
                                             <Crc Value="50313" />
