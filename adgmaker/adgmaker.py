@@ -34,8 +34,9 @@ class PhilharmonicaADGMaker(object):
 
     vargs = None
 
-    def __init__(self):
-        self.adg_maker = ADGMaker()
+    def __init__(self, file_type='wav'):
+        self.adg_maker = ADGMaker(file_type=file_type)
+        self.file_type = file_type
 
     def handle(self, argv=None):
         """
@@ -74,6 +75,7 @@ class PhilharmonicaADGMaker(object):
         Create an ADG from the samples path.
 
         """
+        file_type_wildcard = '*.%s' % self.file_type
 
         # Normalize the input
         if samples_path[-1] != os.sep:
@@ -82,30 +84,50 @@ class PhilharmonicaADGMaker(object):
         # Percussion is a folder of folders
         given_name = None
         if 'percussion' in samples_path:
-            mp3_list = []
+            samples_list = []
             for root, dirnames, filenames in os.walk(samples_path):
-                for filename in fnmatch.filter(filenames, '*.mp3'):
-                    mp3_list.append(os.path.join(root, filename))
+                for filename in fnmatch.filter(filenames, file_type_wildcard):
+                    samples_list.append(os.path.join(root, filename))
             given_name = 'percussion'
 
         else:
-            samples_path = samples_path + '*.mp3'
-            mp3_list = glob.glob(samples_path)
+            samples_path = samples_path + file_type_wildcard
+            samples_list = glob.glob(samples_path)
 
-        for mp3 in mp3_list:
-            file_path = os.path.abspath(mp3)
-            self.adg_maker.add_mp3_to_instrument(file_path, given_name)
+        for wav in samples_list:
+            file_path = os.path.abspath(wav)
 
-        for adg_name in self.adg_maker.all_adgs(): #self.adgs.keys():
+            if given_name is None:
+                given_name = self.make_adg_name(file_path)
+
+            self.adg_maker.add_sample_file_to_instrument(file_path, given_name)
+
+        for adg_name in self.adg_maker.all_adgs():  # self.adgs.keys():
             final_xml = self.adg_maker.create_base_xml(adg_name)
             adg_file = self.adg_maker.create_adg(adg_name, final_xml)
 
         return adg_file
 
+    def make_adg_name(self, file_path):
+        """
+        Given a complete file path, add to the XML for this instrument.
+
+        Samples are in the format:
+            {{instrument_name}}_{{note}}_{{length}}_{{velocity}}_{{hit_type}}.mp3
+        Ex:
+            double-bass_Gs3_1_piano_arco-normal.mp3
+
+        """
+        file_name_no_wav = file_path.split('.' + self.file_type)[0].split(os.sep)[-1]
+        instrument_name, note, length, velocity, hit_type = file_name_no_wav.split('_')
+
+        return instrument_name + '_' + length + "_" + velocity + '_' + hit_type
+
 
 class ADGMaker(object):
 
-    def __init__(self, debug=False):
+    def __init__(self, debug=False, file_type="wav"):
+        self.file_type = file_type
         self.debug = debug
 
     # Ex: {'cello_05_forte_arco-normal': [ xml, xml, .. ]
@@ -121,24 +143,9 @@ class ADGMaker(object):
     def all_adgs(self):
         return self.adgs
 
-    def add_mp3_to_instrument(self, file_path, given_name=None):
-        """
-        Given a complete file path, add to the XML for this instrument.
+    def add_sample_file_to_instrument(self, file_path, adg_name):
 
-        Samples are in the format:
-            {{instrument_name}}_{{note}}_{{length}}_{{velocity}}_{{hit_type}}.mp3
-        Ex:
-            double-bass_Gs3_1_piano_arco-normal.mp3
-
-        """
         instrument_xml = self.create_instrument_xml(file_path)
-        file_name_no_mp3 = file_path.split('.mp3')[0].split(os.sep)[-1]
-        instrument_name, note, length, velocity, hit_type = file_name_no_mp3.split('_')
-
-        if given_name:
-            adg_name = given_name
-        else:
-            adg_name = instrument_name + '_' + length + "_" + velocity + '_' + hit_type
 
         if self.adgs.has_key(adg_name):
             adg_contents = self.adgs[adg_name]
@@ -170,13 +177,15 @@ class ADGMaker(object):
         ableton_path: userfolder:/Users/rjones/Downloads/cello/#cello_C2_05_forte_arco-normal.mp3
         """
 
-        file_name_no_mp3 = file_path.split('.mp3')[0].split(os.sep)[-1]
-        instrument_name, note, length, velocity, hit_type = file_name_no_mp3.split('_')
+        dot_file_type = '.' + self.file_type
 
-        name = file_name_no_mp3
-        mp3_name = name + '.mp3'
+        file_name_no_extension = file_path.split(dot_file_type)[0].split(os.sep)[-1]
+        instrument_name, note, length, velocity, hit_type = file_name_no_extension.split('_')
+
+        name = file_name_no_extension
+        file_name = name + dot_file_type
         note_value = self.string_to_midi_note(note)
-        ableton_path = "userfolder:" + file_path.rsplit(os.sep, 1)[0] + os.sep + '#' + mp3_name
+        ableton_path = "userfolder:" + file_path.rsplit(os.sep, 1)[0] + os.sep + '#' + file_name
 
         path_hint_els = self.crate_path_hint(file_path)
 
@@ -184,7 +193,7 @@ class ADGMaker(object):
         xml = self.jenv.get_template('instrument_xml.tpl').render(
             path_hint_els=path_hint_els,
             name=name,
-            mp3_name=mp3_name,
+            mp3_name=file_name,
             note_value=note_value,
             ableton_path=ableton_path,
             data=data
@@ -382,7 +391,7 @@ def handle():  # pragma: no cover
         return
 
     # try:
-    adg_maker = PhilharmonicaADGMaker()
+    adg_maker = PhilharmonicaADGMaker(file_type='mp3')
     adg_maker.handle()
     # except (KeyboardInterrupt, SystemExit): # pragma: no cover
     #     return
