@@ -16,29 +16,6 @@ from jinja2 import Environment, FileSystemLoader
 # Data
 ####################################################################
 
-all_zip_urls = [
-    "http://www.philharmonia.co.uk/assets/audio/samples/banjo/banjo.zip",
-    "http://www.philharmonia.co.uk/assets/audio/samples/bass%20clarinet/bass%20clarinet.zip",
-    "http://www.philharmonia.co.uk/assets/audio/samples/bassoon/bassoon.zip",
-    "http://www.philharmonia.co.uk/assets/audio/samples/cello/cello.zip",
-    "http://www.philharmonia.co.uk/assets/audio/samples/clarinet/clarinet.zip",
-    "http://www.philharmonia.co.uk/assets/audio/samples/contrabassoon/contrabassoon.zip",
-    "http://www.philharmonia.co.uk/assets/audio/samples/cor%20anglais/cor%20anglais.zip",
-    "http://www.philharmonia.co.uk/assets/audio/samples/double%20bass/double%20bass.zip",
-    "http://www.philharmonia.co.uk/assets/audio/samples/flute/flute.zip",
-    "http://www.philharmonia.co.uk/assets/audio/samples/french%20horn/french%20horn.zip",
-    "http://www.philharmonia.co.uk/assets/audio/samples/guitar/guitar.zip",
-    "http://www.philharmonia.co.uk/assets/audio/samples/mandolin/mandolin.zip",
-    "http://www.philharmonia.co.uk/assets/audio/samples/oboe/oboe.zip",
-    "http://www.philharmonia.co.uk/assets/audio/samples/saxophone/saxophone.zip",
-    "http://www.philharmonia.co.uk/assets/audio/samples/trombone/trombone.zip",
-    "http://www.philharmonia.co.uk/assets/audio/samples/trumpet/trumpet.zip",
-    "http://www.philharmonia.co.uk/assets/audio/samples/tuba/tuba.zip",
-    "http://www.philharmonia.co.uk/assets/audio/samples/viola/viola.zip",
-    "http://www.philharmonia.co.uk/assets/audio/samples/violin/violin.zip",
-    "http://www.philharmonia.co.uk/assets/audio/samples/percussion/percussion.zip"
-]
-
 home_dir = os.path.expanduser("~")
 samples_dir = os.path.join(home_dir, 'Music', 'Ableton', 'User Library', 'Samples', 'Imported')
 adg_dir = os.path.join(home_dir, 'Music', 'Ableton', 'User Library', 'Presets', 'Instruments', 'Created')
@@ -55,10 +32,7 @@ class PhilharmonicaADGMaker(object):
 
     """
 
-    # # Ex: {'cello_05_forte_arco-normal': [ xml, xml, .. ]
-    # adgs = {}
-    # vargs = None
-    # default_note = 104
+    vargs = None
 
     def __init__(self):
         self.adg_maker = ADGMaker()
@@ -70,12 +44,10 @@ class PhilharmonicaADGMaker(object):
         Parses command, load settings and dispatches accordingly.
 
         """
-        help_message = "Please supply a path to a folder of MP3s or --all. See --help for more options."
+        help_message = "Please supply a path to a folder of MP3s. See --help for more options."
         parser = argparse.ArgumentParser(description='ADGMaker - Create Ableton Live Instruments.\n')
         parser.add_argument('samples_path', metavar='U', type=str, nargs='*', help=help_message)
         parser.add_argument('-d', '--debug', action='store_true', help='Debug (no delete XML)', default=False)
-        parser.add_argument('-a', '--all', action='store_true',
-                            help='Fetch all available instruments from philharmonia website', default=False)
         parser.add_argument('-v', '--version', action='store_true', default=False,
                             help='Display the current version of ADGMaker')
 
@@ -88,39 +60,12 @@ class PhilharmonicaADGMaker(object):
             return
 
         # Samples are an important requirement.
-        if not self.vargs['samples_path'] and not self.vargs['all']:
+        if not self.vargs['samples_path']:
             print(help_message)
             return
 
         if self.vargs['samples_path']:
             self.create_adg_from_samples_path(self.vargs['samples_path'][0])
-
-        if self.vargs['all']:
-            for zip_url in all_zip_urls:
-
-                # Download the zip
-                zip_file_name = zip_url.rsplit('/', 1)[1]
-                print("\nDownloading " + zip_file_name + "..\n")
-
-                with open(zip_file_name, 'wb') as handle:
-                    response = requests.get(zip_url, stream=True)
-                    for block in response.iter_content(1024):
-                        handle.write(block)
-
-                # Unzip to a directory
-                dir_name = zip_file_name.split('.zip')[0]
-                zip_ref = zipfile.ZipFile(zip_file_name, 'r')
-                zip_ref.extractall(dir_name)
-                zip_ref.close()
-
-                # Delete zip
-                os.remove(zip_file_name)
-
-                # Create ADG from samples
-                self.create_adg_from_samples_path(dir_name)
-
-                #self.adgs = {}
-                self.adg_maker.empty_adgs()
 
         print("Done! Remember to update your User Library in Live to see these new instruments!")
 
@@ -165,7 +110,6 @@ class ADGMaker(object):
 
     # Ex: {'cello_05_forte_arco-normal': [ xml, xml, .. ]
     adgs = {}
-    # vargs = None
     default_note = 104
 
     jenv = Environment(loader=FileSystemLoader(os.path.dirname(os.path.realpath(__file__))),
@@ -270,7 +214,6 @@ class ADGMaker(object):
         with open(xml_name) as f_in, gzip.open(adg_file, 'wb') as f_out:
             f_out.writelines(f_in)
 
-        #if not self.vargs.get('d', False):
         if not self.debug:
             os.remove(xml_name)
 
