@@ -48,19 +48,20 @@ adg_dir = os.path.join(home_dir, 'Music', 'Ableton', 'User Library', 'Presets', 
 # Main
 ####################################################################
 
-class ADGMaker(object):
+
+class PhilharmonicaADGMaker(object):
     """
     Read CLI input, create ADGs.
 
     """
 
-    jenv = Environment(loader=FileSystemLoader(os.path.dirname(os.path.realpath(__file__))),
-                       trim_blocks=True)
+    # # Ex: {'cello_05_forte_arco-normal': [ xml, xml, .. ]
+    # adgs = {}
+    # vargs = None
+    # default_note = 104
 
-    # Ex: {'cello_05_forte_arco-normal': [ xml, xml, .. ]
-    adgs = {}
-    vargs = None
-    default_note = 104
+    def __init__(self):
+        self.adg_maker = ADGMaker()
 
     def handle(self, argv=None):
         """
@@ -70,11 +71,9 @@ class ADGMaker(object):
 
         """
         help_message = "Please supply a path to a folder of MP3s or --all. See --help for more options."
-        parser = argparse.ArgumentParser(description='ADGMaker - Create and install Ableton Live Instruments.\n')
+        parser = argparse.ArgumentParser(description='ADGMaker - Create Ableton Live Instruments.\n')
         parser.add_argument('samples_path', metavar='U', type=str, nargs='*', help=help_message)
         parser.add_argument('-d', '--debug', action='store_true', help='Debug (no delete XML)', default=False)
-        parser.add_argument('-i', '--install', action='store_true', help='Install into Ableton directory',
-                            default=False)
         parser.add_argument('-a', '--all', action='store_true',
                             help='Fetch all available instruments from philharmonia website', default=False)
         parser.add_argument('-v', '--version', action='store_true', default=False,
@@ -92,14 +91,6 @@ class ADGMaker(object):
         if not self.vargs['samples_path'] and not self.vargs['all']:
             print(help_message)
             return
-
-        # Make sure we have the necessary dirs to install into.
-        if self.vargs['install']:
-            if not os.path.exists(samples_dir):
-                os.makedirs(samples_dir)
-
-            if not os.path.exists(adg_dir):
-                os.makedirs(adg_dir)
 
         if self.vargs['samples_path']:
             self.create_adg_from_samples_path(self.vargs['samples_path'][0])
@@ -128,7 +119,8 @@ class ADGMaker(object):
                 # Create ADG from samples
                 self.create_adg_from_samples_path(dir_name)
 
-                self.adgs = {}
+                #self.adgs = {}
+                self.adg_maker.empty_adgs()
 
         print("Done! Remember to update your User Library in Live to see these new instruments!")
 
@@ -157,18 +149,33 @@ class ADGMaker(object):
 
         for mp3 in mp3_list:
             file_path = os.path.abspath(mp3)
-            self.add_mp3_to_instrument(file_path, given_name)
+            self.adg_maker.add_mp3_to_instrument(file_path, given_name)
 
-        for adg_name in self.adgs.keys():
-            final_xml = self.create_base_xml(adg_name)
-            adg_file = self.create_adg(adg_name, final_xml)
-
-            if self.vargs['install']:
-                print("Installing " + adg_file + "..")
-                dest_path = os.path.join(adg_dir, adg_file)
-                shutil.move(adg_file, dest_path)
+        for adg_name in self.adg_maker.all_adgs(): #self.adgs.keys():
+            final_xml = self.adg_maker.create_base_xml(adg_name)
+            adg_file = self.adg_maker.create_adg(adg_name, final_xml)
 
         return adg_file
+
+
+class ADGMaker(object):
+
+    def __init__(self, debug=False):
+        self.debug = debug
+
+    # Ex: {'cello_05_forte_arco-normal': [ xml, xml, .. ]
+    adgs = {}
+    # vargs = None
+    default_note = 104
+
+    jenv = Environment(loader=FileSystemLoader(os.path.dirname(os.path.realpath(__file__))),
+                       trim_blocks=True)
+
+    def empty_adgs(self):
+        self.adgs = {}
+
+    def all_adgs(self):
+        return self.adgs
 
     def add_mp3_to_instrument(self, file_path, given_name=None):
         """
@@ -196,11 +203,6 @@ class ADGMaker(object):
 
         adg_contents.append(instrument_xml)
         self.adgs[adg_name] = adg_contents
-
-        # Install the MP3?
-        if self.vargs['install']:
-            dest_path = os.path.join(samples_dir, file_name_no_mp3 + '.mp3')
-            shutil.move(file_path, dest_path)
 
         return
 
@@ -268,7 +270,8 @@ class ADGMaker(object):
         with open(xml_name) as f_in, gzip.open(adg_file, 'wb') as f_out:
             f_out.writelines(f_in)
 
-        if not self.vargs.get('d', False):
+        #if not self.vargs.get('d', False):
+        if not self.debug:
             os.remove(xml_name)
 
         print("Created " + adg_file + "!")
@@ -436,7 +439,7 @@ def handle():  # pragma: no cover
         return
 
     # try:
-    adg_maker = ADGMaker()
+    adg_maker = PhilharmonicaADGMaker()
     adg_maker.handle()
     # except (KeyboardInterrupt, SystemExit): # pragma: no cover
     #     return
