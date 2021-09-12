@@ -119,7 +119,7 @@
                                             <RelativePathElement Dir="Samples" />
                                             <RelativePathElement Dir="Imported" />
                                         </RelativePath>
-                                        <Name Value="{{mp3_name}}" />
+                                        <Name Value="{{sample_file_name}}" />
                                         <Type Value="2" />
                                         <Data>
                                             {{data}}
@@ -154,7 +154,7 @@
                                                         <RelativePathElement Dir="Downloads" />
                                                         <RelativePathElement Dir="cello" />
                                                     </RelativePath>
-                                                    <Name Value="{{mp3_name}}" />
+                                                    <Name Value="{{sample_file_name}}" />
                                                     <Type Value="2" />
                                                     <Data>
                                                         {{data}}
@@ -1600,7 +1600,7 @@
                     <RelativePathElement Dir="Downloads" />
                     <RelativePathElement Dir="cello" />
                 </RelativePath>
-                <Name Value="{{mp3_name}}" />
+                <Name Value="{{sample_file_name}}" />
                 <Type Value="2" />
                 <Data>
                     {{data}}
