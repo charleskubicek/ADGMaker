@@ -6,11 +6,11 @@ import glob
 import gzip
 import pkg_resources
 import platform
-import requests
 import shutil
 import os
-import zipfile
+from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
+import binascii
 
 
 class PhilharmonicaADGMaker(object):
@@ -117,12 +117,12 @@ class ADGMaker(object):
         self.file_type = file_type
         self.debug = debug
 
-    # Ex: {'cello_05_forte_arco-normal': [ xml, xml, .. ]
+        # Ex: {'cello_05_forte_arco-normal': [ xml, xml, .. ]
         self.adgs = {}
         self.default_note = 104
 
         self.jenv = Environment(loader=FileSystemLoader(os.path.dirname(os.path.realpath(__file__))),
-                       trim_blocks=True)
+                                trim_blocks=True)
 
     def empty_adgs(self):
         self.adgs = {}
@@ -130,11 +130,11 @@ class ADGMaker(object):
     def all_adgs(self):
         return self.adgs
 
-    def add_sample_file_to_instrument(self, file_path, adg_name):
+    def add_sample_file_to_instrument(self, file_path, adg_name, note_value):
 
-        instrument_xml = self.create_instrument_xml(file_path)
+        instrument_xml = self.create_instrument_xml(file_path, note_value)
 
-        if self.adgs.has_key(adg_name):
+        if adg_name in self.adgs:
             adg_contents = self.adgs[adg_name]
         else:
             adg_contents = []
@@ -156,27 +156,21 @@ class ADGMaker(object):
 
         return xml
 
-    def create_instrument_xml(self, file_path):
-        """
-        name: cello_C2_05_forte_arco-normal
-        mp3_name: cello_C2_05_forte_arco-normal.mp3
-        note_value: 80
-        ableton_path: userfolder:/Users/rjones/Downloads/cello/#cello_C2_05_forte_arco-normal.mp3
-        """
+    def create_instrument_xml(self, file_path, note_value):
 
         dot_file_type = '.' + self.file_type
 
         file_name_no_extension = file_path.split(dot_file_type)[0].split(os.sep)[-1]
-        instrument_name, note, length, velocity, hit_type = file_name_no_extension.split('_')
 
         name = file_name_no_extension
         file_name = name + dot_file_type
-        note_value = self.string_to_midi_note(note)
+        # note_value = self.string_to_midi_note(note)
         ableton_path = "userfolder:" + file_path.rsplit(os.sep, 1)[0] + os.sep + '#' + file_name
 
         path_hint_els = self.crate_path_hint(file_path)
 
-        data = file_path.encode('utf-16').encode('hex').upper()
+        data = binascii.hexlify(file_path.encode('utf-16')).decode('utf-8').upper()
+
         xml = self.jenv.get_template('instrument_xml.tpl').render(
             path_hint_els=path_hint_els,
             name=name,
@@ -207,8 +201,9 @@ class ADGMaker(object):
         f.write(xml)
         f.close()
 
-        with open(xml_name) as f_in, gzip.open(adg_file, 'wb') as f_out:
-            f_out.writelines(f_in)
+        with open(xml_name, 'rb') as f_in:
+            with gzip.open(adg_file, 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
 
         if not self.debug:
             os.remove(xml_name)
@@ -368,6 +363,72 @@ class ADGMaker(object):
             return note
 
 
+class SamplePackAdgMaker:
+
+    def __init__(self, file_type="wav"):
+        self.file_type = file_type
+        self.adg_maker = ADGMaker(file_type=file_type)
+
+    def handle(self, argv=None):
+        """
+        Main function.
+
+        Parses command, load settings and dispatches accordingly.
+
+        """
+        help_message = "Please supply a path to a folder of samples. See --help for more options."
+        parser = argparse.ArgumentParser(description='ADGMaker - Create Ableton Live Instruments.\n')
+        parser.add_argument('samples_path', metavar='U', type=str, nargs='*', help=help_message)
+        parser.add_argument('-d', '--debug', action='store_true', help='Debug (no delete XML)', default=False)
+        parser.add_argument('-v', '--version', action='store_true', default=False,
+                            help='Display the current version of ADGMaker')
+
+        args = parser.parse_args(argv)
+        self.vargs = vars(args)
+
+        print(self.vargs['samples_path'])
+
+        if self.vargs['version']:
+            version = pkg_resources.require("adgmaker")[0].version
+            print(version)
+            return
+
+        # Samples are an important requirement.
+        if not self.vargs['samples_path']:
+            print(help_message)
+            return
+
+        if self.vargs['samples_path']:
+            self.create_adg_from_samples_path(self.vargs['samples_path'][0])
+
+        print("Done! Remember to update your User Library in Live to see these new instruments!")
+
+    def create_adg_from_samples_path(self, samples_path, given_name=None):
+        """
+        Create an ADG from the samples path.
+
+        """
+        file_type_wildcard = f'*.{self.file_type}'
+
+        if given_name is None:
+            given_name = Path(samples_path).parts[-1]
+
+        samples_list = list(Path(samples_path).rglob(file_type_wildcard))[0:104]
+
+        for i, wav in enumerate(samples_list):
+            print(wav)
+            file_path = os.path.abspath(wav)
+
+            note_value = 104 - i
+            self.adg_maker.add_sample_file_to_instrument(file_path, given_name, note_value)
+
+        for adg_name in self.adg_maker.all_adgs():  # self.adgs.keys():
+            final_xml = self.adg_maker.create_base_xml(adg_name)
+            adg_file = self.adg_maker.create_adg(adg_name, final_xml)
+
+        return adg_file
+
+
 def handle():  # pragma: no cover
     """
     Main program execution handler.
@@ -387,4 +448,4 @@ def handle():  # pragma: no cover
 
 
 if __name__ == '__main__':  # pragma: no cover
-    handle()
+    SamplePackAdgMaker().handle()
