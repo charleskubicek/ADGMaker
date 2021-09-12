@@ -1,114 +1,15 @@
 # ADGMaker
 
 import argparse
-import fnmatch
-import glob
+import binascii
 import gzip
-import pkg_resources
+import os
 import platform
 import shutil
-import os
 from pathlib import Path
+
+import pkg_resources
 from jinja2 import Environment, FileSystemLoader
-import binascii
-
-
-class PhilharmonicaADGMaker(object):
-    """
-    Read CLI input, create ADGs.
-
-    """
-
-    vargs = None
-
-    def __init__(self, file_type='wav'):
-        self.adg_maker = ADGMaker(file_type=file_type)
-        self.file_type = file_type
-
-    def handle(self, argv=None):
-        """
-        Main function.
-
-        Parses command, load settings and dispatches accordingly.
-
-        """
-        help_message = "Please supply a path to a folder of MP3s. See --help for more options."
-        parser = argparse.ArgumentParser(description='ADGMaker - Create Ableton Live Instruments.\n')
-        parser.add_argument('samples_path', metavar='U', type=str, nargs='*', help=help_message)
-        parser.add_argument('-d', '--debug', action='store_true', help='Debug (no delete XML)', default=False)
-        parser.add_argument('-v', '--version', action='store_true', default=False,
-                            help='Display the current version of ADGMaker')
-
-        args = parser.parse_args(argv)
-        self.vargs = vars(args)
-
-        if self.vargs['version']:
-            version = pkg_resources.require("adgmaker")[0].version
-            print(version)
-            return
-
-        # Samples are an important requirement.
-        if not self.vargs['samples_path']:
-            print(help_message)
-            return
-
-        if self.vargs['samples_path']:
-            self.create_adg_from_samples_path(self.vargs['samples_path'][0])
-
-        print("Done! Remember to update your User Library in Live to see these new instruments!")
-
-    def create_adg_from_samples_path(self, samples_path):
-        """
-        Create an ADG from the samples path.
-
-        """
-        file_type_wildcard = '*.%s' % self.file_type
-
-        # Normalize the input
-        if samples_path[-1] != os.sep:
-            samples_path = samples_path + os.sep
-
-        # Percussion is a folder of folders
-        given_name = None
-        if 'percussion' in samples_path:
-            samples_list = []
-            for root, dirnames, filenames in os.walk(samples_path):
-                for filename in fnmatch.filter(filenames, file_type_wildcard):
-                    samples_list.append(os.path.join(root, filename))
-            given_name = 'percussion'
-
-        else:
-            samples_path = samples_path + file_type_wildcard
-            samples_list = glob.glob(samples_path)
-
-        for wav in samples_list:
-            file_path = os.path.abspath(wav)
-
-            if given_name is None:
-                given_name = self.make_adg_name(file_path)
-
-            self.adg_maker.add_sample_file_to_instrument(file_path, given_name)
-
-        for adg_name in self.adg_maker.all_adgs():  # self.adgs.keys():
-            final_xml = self.adg_maker.create_base_xml(adg_name)
-            adg_file = self.adg_maker.create_adg(adg_name, final_xml)
-
-        return adg_file
-
-    def make_adg_name(self, file_path):
-        """
-        Given a complete file path, add to the XML for this instrument.
-
-        Samples are in the format:
-            {{instrument_name}}_{{note}}_{{length}}_{{velocity}}_{{hit_type}}.mp3
-        Ex:
-            double-bass_Gs3_1_piano_arco-normal.mp3
-
-        """
-        file_name_no_wav = file_path.split('.' + self.file_type)[0].split(os.sep)[-1]
-        instrument_name, note, length, velocity, hit_type = file_name_no_wav.split('_')
-
-        return instrument_name + '_' + length + "_" + velocity + '_' + hit_type
 
 
 class ADGMaker(object):
