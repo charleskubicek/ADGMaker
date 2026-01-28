@@ -1,0 +1,594 @@
+/* ADGMaker UI Styles */
+
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-tertiary: #0f3460;
+  --text-primary: #eaeaea;
+  --text-secondary: #a0a0a0;
+  --accent-primary: #e94560;
+  --accent-secondary: #533483;
+  --success: #4ade80;
+  --error: #f87171;
+  --warning: #fbbf24;
+  --info: #60a5fa;
+  --border-color: #2d3748;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+/* App layout */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-height: 100vh;
+}
+
+.app-header {
+  padding: 16px 24px;
+  background: linear-gradient(135deg, var(--bg-secondary), var(--accent-secondary));
+  border-bottom: 1px solid var(--border-color);
+}
+
+.app-header h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.app-header .subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.app-main {
+  flex: 1;
+  padding: 16px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.app-footer {
+  padding: 8px 24px;
+  background-color: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Panels */
+.panel {
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow);
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.panel-header h2 {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.panel-content {
+  padding: 16px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn-large {
+  padding: 16px 32px;
+  font-size: 16px;
+  width: 100%;
+}
+
+.btn-primary {
+  background-color: var(--accent-primary);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #d63851;
+}
+
+.btn-secondary {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #1a4a7a;
+}
+
+.btn-danger {
+  background-color: transparent;
+  color: var(--error);
+  border: 1px solid var(--error);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: var(--error);
+  color: white;
+}
+
+.btn-generate {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: white;
+  font-weight: 600;
+}
+
+.btn-generate:hover:not(:disabled) {
+  background: linear-gradient(135deg, #d63851, #4a2d73);
+  transform: translateY(-1px);
+}
+
+.btn-cancel {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.btn-cancel:hover {
+  background-color: #1a4a7a;
+}
+
+/* Folder list */
+.folder-list .panel-content {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 24px;
+  color: var(--text-secondary);
+}
+
+.empty-state .hint {
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.folder-items {
+  list-style: none;
+}
+
+.folder-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background-color: var(--bg-tertiary);
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.folder-item:last-child {
+  margin-bottom: 0;
+}
+
+.folder-icon {
+  font-size: 18px;
+}
+
+.folder-name {
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.folder-path {
+  flex: 1;
+  font-size: 12px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Settings panel */
+.setting-row {
+  margin-bottom: 16px;
+}
+
+.setting-row:last-child {
+  margin-bottom: 0;
+}
+
+.setting-row label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.setting-row select,
+.setting-row input[type="text"] {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+}
+
+.setting-row select:focus,
+.setting-row input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-primary);
+}
+
+.setting-row .hint {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  margin-left: 26px;
+}
+
+.output-selector {
+  display: flex;
+  gap: 8px;
+}
+
+.output-selector input {
+  flex: 1;
+}
+
+/* Generate section */
+.generate-section {
+  margin-top: 8px;
+}
+
+/* Progress log */
+.progress-log .panel-content {
+  height: 150px;
+  overflow-y: auto;
+}
+
+.log-container {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+}
+
+.log-entries {
+  list-style: none;
+}
+
+.log-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.log-entry:last-child {
+  border-bottom: none;
+}
+
+.log-icon {
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.log-time {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.log-message {
+  flex: 1;
+  word-break: break-word;
+}
+
+.log-success .log-icon,
+.log-success .log-message {
+  color: var(--success);
+}
+
+.log-error .log-icon,
+.log-error .log-message {
+  color: var(--error);
+}
+
+.log-progress .log-icon {
+  color: var(--warning);
+}
+
+.log-info .log-icon {
+  color: var(--info);
+}
+
+/* Spinner */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2a5a8a;
+}
+
+/* Loading Screen */
+.loading-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+}
+
+.loading-content {
+  text-align: center;
+}
+
+.loading-content .spinner.large {
+  width: 48px;
+  height: 48px;
+  border-width: 3px;
+  margin: 0 auto 16px;
+}
+
+.loading-content p {
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+/* Onboarding */
+.onboarding {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+  padding: 24px;
+}
+
+.onboarding-content {
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+}
+
+.onboarding-content h1 {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.onboarding-content > .subtitle {
+  color: var(--text-secondary);
+  font-size: 16px;
+  margin-bottom: 32px;
+}
+
+.onboarding-section {
+  background-color: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 32px;
+  border: 1px solid var(--border-color);
+}
+
+.onboarding-section h2 {
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+
+.onboarding-section p {
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.onboarding-section .hint {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: left;
+  background-color: var(--bg-tertiary);
+  padding: 12px;
+  border-radius: 6px;
+  margin-top: 16px;
+}
+
+.onboarding-section .hint strong {
+  color: var(--text-primary);
+}
+
+.onboarding-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.onboarding-actions .btn-large {
+  width: 100%;
+}
+
+.detecting {
+  padding: 32px;
+}
+
+.detecting .spinner.large {
+  width: 48px;
+  height: 48px;
+  border-width: 3px;
+  margin: 0 auto 16px;
+  color: var(--accent-primary);
+}
+
+.detected-success,
+.not-found {
+  padding: 16px 0;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  font-size: 24px;
+  margin-bottom: 16px;
+}
+
+.icon.success {
+  background-color: rgba(74, 222, 128, 0.2);
+  color: var(--success);
+}
+
+.icon.warning {
+  background-color: rgba(251, 191, 36, 0.2);
+  color: var(--warning);
+}
+
+.path {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  background-color: var(--bg-tertiary);
+  padding: 12px;
+  border-radius: 6px;
+  word-break: break-all;
+  margin: 16px 0;
+}
+
+.selected-path {
+  margin: 16px 0;
+  padding: 16px;
+  border-radius: 8px;
+  background-color: var(--bg-tertiary);
+}
+
+.selected-path.valid {
+  border: 1px solid var(--success);
+}
+
+.selected-path.warning {
+  border: 1px solid var(--warning);
+}
+
+.selected-path .path {
+  margin: 0 0 8px 0;
+  padding: 0;
+  background: none;
+}
+
+.warning-text {
+  color: var(--warning);
+  font-size: 12px;
+  margin: 0;
+}
+
+.error-text {
+  color: var(--error);
+  font-size: 13px;
+  margin-top: 12px;
+}
+
+.btn-link {
+  background: none;
+  color: var(--text-secondary);
+  text-decoration: underline;
+  padding: 8px;
+}
+
+.btn-link:hover {
+  color: var(--text-primary);
+}
+
+.spinner.large {
+  width: 48px;
+  height: 48px;
+  border-width: 3px;
+}
