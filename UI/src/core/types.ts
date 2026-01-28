@@ -47,13 +47,29 @@ export interface AdgData {
   instruments: string[];
 }
 
+// Ableton Library types
+export interface AbletonLibraryResult {
+  path: string | null;
+  autoDetected: boolean;
+  needsManualSelection: boolean;
+}
+
+export interface AppSettings {
+  abletonLibraryPath: string | null;
+  onboardingComplete: boolean;
+}
+
 // IPC Channel names
 export const IPC_CHANNELS = {
   // Renderer -> Main
   SELECT_FOLDER: 'dialog:select-folder',
   SELECT_OUTPUT: 'dialog:select-output',
+  SELECT_LIBRARY: 'dialog:select-library',
   GENERATE: 'adg:generate',
   CANCEL: 'adg:cancel',
+  DETECT_LIBRARY: 'library:detect',
+  SAVE_SETTINGS: 'settings:save',
+  LOAD_SETTINGS: 'settings:load',
 
   // Main -> Renderer
   CREATED: 'adg:created',
@@ -62,4 +78,6 @@ export const IPC_CHANNELS = {
   COMPLETE: 'adg:complete',
   FOLDER_SELECTED: 'dialog:folder-selected',
   OUTPUT_SELECTED: 'dialog:output-selected',
+  LIBRARY_DETECTED: 'library:detected',
+  SETTINGS_LOADED: 'settings:loaded',
 } as const;

@@ -3,7 +3,8 @@ import FolderList from './components/FolderList';
 import SettingsPanel from './components/SettingsPanel';
 import GenerateButton from './components/GenerateButton';
 import ProgressLog from './components/ProgressLog';
-import { FileType, AdgCreatedEvent, AdgErrorEvent, AdgProgressEvent, AdgCompleteEvent } from '../core/types';
+import Onboarding from './components/Onboarding';
+import { FileType, AdgCreatedEvent, AdgErrorEvent, AdgProgressEvent, AdgCompleteEvent, AppSettings } from '../core/types';
 
 interface LogEntry {
   id: number;
@@ -13,6 +14,11 @@ interface LogEntry {
 }
 
 const App: React.FC = () => {
+  // Onboarding state
+  const [isLoading, setIsLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [abletonLibraryPath, setAbletonLibraryPath] = useState<string | null>(null);
+
   // State
   const [folders, setFolders] = useState<string[]>([]);
   const [fileType, setFileType] = useState<FileType>('wav');
@@ -22,6 +28,52 @@ const App: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [logIdCounter, setLogIdCounter] = useState(0);
+
+  // Load settings on mount
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      const settings = await window.electronAPI.loadSettings();
+
+      if (settings.onboardingComplete && settings.abletonLibraryPath) {
+        setAbletonLibraryPath(settings.abletonLibraryPath);
+        setOutputDirectory(settings.abletonLibraryPath + '/Presets/Instruments/Drum Rack');
+        setShowOnboarding(false);
+      } else {
+        setShowOnboarding(true);
+      }
+    } catch (err) {
+      console.error('Failed to load settings:', err);
+      setShowOnboarding(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOnboardingComplete = async (libraryPath: string) => {
+    setAbletonLibraryPath(libraryPath);
+
+    // Set output directory to the Drum Rack presets folder
+    const drumRackPath = libraryPath + '/Presets/Instruments/Drum Rack';
+    setOutputDirectory(drumRackPath);
+
+    // Save settings
+    const settings: AppSettings = {
+      abletonLibraryPath: libraryPath,
+      onboardingComplete: true,
+    };
+
+    try {
+      await window.electronAPI.saveSettings(settings);
+    } catch (err) {
+      console.error('Failed to save settings:', err);
+    }
+
+    setShowOnboarding(false);
+  };
 
   // Add log entry
   const addLog = useCallback((type: LogEntry['type'], message: string) => {
@@ -57,6 +109,7 @@ const App: React.FC = () => {
 
     const unsubComplete = window.electronAPI.onAdgComplete((event: AdgCompleteEvent) => {
       addLog('success', `Complete! Created ${event.count} ADG file(s)`);
+      addLog('info', 'Remember to refresh your User Library in Ableton Live to see the new racks!');
       setIsGenerating(false);
     });
 
@@ -122,6 +175,24 @@ const App: React.FC = () => {
     setIsGenerating(false);
   };
 
+  // Show loading screen
+  if (isLoading) {
+    return (
+      <div className="app loading-screen">
+        <div className="loading-content">
+          <span className="spinner large"></span>
+          <p>Loading ADGMaker...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show onboarding
+  if (showOnboarding) {
+    return <Onboarding onComplete={handleOnboardingComplete} />;
+  }
+
+  // Show main app
   return (
     <div className="app">
       <header className="app-header">
@@ -160,7 +231,7 @@ const App: React.FC = () => {
       </main>
 
       <footer className="app-footer">
-        <span>Ready</span>
+        <span>Library: {abletonLibraryPath || 'Not set'}</span>
       </footer>
     </div>
   );

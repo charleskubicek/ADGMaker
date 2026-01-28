@@ -11,18 +11,34 @@ import {
   AdgErrorEvent,
   AdgProgressEvent,
   AdgCompleteEvent,
+  AbletonLibraryResult,
+  AppSettings,
   IPC_CHANNELS,
 } from '../core/types';
+
+// Library selection result
+interface LibrarySelectionResult {
+  path: string;
+  isValid: boolean;
+}
 
 // Define the API exposed to the renderer
 export interface ElectronAPI {
   // Dialogs
   selectFolder: () => Promise<string | null>;
   selectOutputDirectory: () => Promise<string | null>;
+  selectLibraryPath: () => Promise<LibrarySelectionResult | null>;
 
   // ADG Generation
   generate: (options: GenerateOptions) => void;
   cancelGeneration: () => void;
+
+  // Ableton Library
+  detectLibrary: () => Promise<AbletonLibraryResult>;
+
+  // Settings
+  loadSettings: () => Promise<AppSettings>;
+  saveSettings: (settings: AppSettings) => Promise<boolean>;
 
   // Event listeners
   onAdgCreated: (callback: (event: AdgCreatedEvent) => void) => () => void;
@@ -35,6 +51,7 @@ const electronAPI: ElectronAPI = {
   // Dialogs
   selectFolder: () => ipcRenderer.invoke(IPC_CHANNELS.SELECT_FOLDER),
   selectOutputDirectory: () => ipcRenderer.invoke(IPC_CHANNELS.SELECT_OUTPUT),
+  selectLibraryPath: () => ipcRenderer.invoke(IPC_CHANNELS.SELECT_LIBRARY),
 
   // ADG Generation
   generate: (options: GenerateOptions) => {
@@ -43,6 +60,13 @@ const electronAPI: ElectronAPI = {
   cancelGeneration: () => {
     ipcRenderer.send(IPC_CHANNELS.CANCEL);
   },
+
+  // Ableton Library
+  detectLibrary: () => ipcRenderer.invoke(IPC_CHANNELS.DETECT_LIBRARY),
+
+  // Settings
+  loadSettings: () => ipcRenderer.invoke(IPC_CHANNELS.LOAD_SETTINGS),
+  saveSettings: (settings: AppSettings) => ipcRenderer.invoke(IPC_CHANNELS.SAVE_SETTINGS, settings),
 
   // Event listeners with cleanup
   onAdgCreated: (callback: (event: AdgCreatedEvent) => void) => {

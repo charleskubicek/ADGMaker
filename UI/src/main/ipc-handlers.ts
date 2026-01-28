@@ -6,11 +6,43 @@
 
 import { ipcMain, dialog, BrowserWindow, app } from 'electron';
 import * as path from 'path';
+import * as fs from 'fs';
 import { SamplePackProcessor } from '../core/sample-pack-processor';
-import { GenerateOptions, IPC_CHANNELS } from '../core/types';
+import { GenerateOptions, IPC_CHANNELS, AppSettings } from '../core/types';
+import {
+  findAbletonLibrary,
+  isValidAbletonLibrary,
+  getRecommendedOutputPath,
+} from '../core/ableton-library';
 
 let processor: SamplePackProcessor | null = null;
 let mainWindowRef: BrowserWindow | null = null;
+
+// Settings file path
+function getSettingsPath(): string {
+  const userDataPath = app.getPath('userData');
+  return path.join(userDataPath, 'settings.json');
+}
+
+// Load settings from file
+async function loadSettings(): Promise<AppSettings> {
+  const settingsPath = getSettingsPath();
+  try {
+    const data = await fs.promises.readFile(settingsPath, 'utf-8');
+    return JSON.parse(data);
+  } catch {
+    return {
+      abletonLibraryPath: null,
+      onboardingComplete: false,
+    };
+  }
+}
+
+// Save settings to file
+async function saveSettings(settings: AppSettings): Promise<void> {
+  const settingsPath = getSettingsPath();
+  await fs.promises.writeFile(settingsPath, JSON.stringify(settings, null, 2));
+}
 
 export function setupIpcHandlers(mainWindow: BrowserWindow | null): void {
   mainWindowRef = mainWindow;
@@ -45,6 +77,61 @@ export function setupIpcHandlers(mainWindow: BrowserWindow | null): void {
     }
 
     return result.filePaths[0];
+  });
+
+  // Handle Ableton library selection dialog
+  ipcMain.handle(IPC_CHANNELS.SELECT_LIBRARY, async () => {
+    if (!mainWindowRef) return null;
+
+    const result = await dialog.showOpenDialog(mainWindowRef, {
+      properties: ['openDirectory'],
+      title: 'Select Ableton User Library Folder',
+      message: 'Select your Ableton Live User Library folder (usually in Music/Ableton/User Library)',
+    });
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return null;
+    }
+
+    const selectedPath = result.filePaths[0];
+
+    // Validate the selected path
+    const isValid = await isValidAbletonLibrary(selectedPath);
+
+    return {
+      path: selectedPath,
+      isValid,
+    };
+  });
+
+  // Handle Ableton library auto-detection
+  ipcMain.handle(IPC_CHANNELS.DETECT_LIBRARY, async () => {
+    const detectedPath = await findAbletonLibrary();
+
+    if (detectedPath) {
+      return {
+        path: detectedPath,
+        autoDetected: true,
+        needsManualSelection: false,
+      };
+    }
+
+    return {
+      path: null,
+      autoDetected: false,
+      needsManualSelection: true,
+    };
+  });
+
+  // Handle settings loading
+  ipcMain.handle(IPC_CHANNELS.LOAD_SETTINGS, async () => {
+    return await loadSettings();
+  });
+
+  // Handle settings saving
+  ipcMain.handle(IPC_CHANNELS.SAVE_SETTINGS, async (event, settings: AppSettings) => {
+    await saveSettings(settings);
+    return true;
   });
 
   // Handle ADG generation
